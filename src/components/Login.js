@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FaMoneyBillWave } from 'react-icons/fa';
+import { FaMoneyBillWave, FaUser, FaLock, FaSignInAlt } from 'react-icons/fa';
 
 const ADMIN_CREDENTIALS = {
   username: 'hanamel',
@@ -92,54 +92,142 @@ function Login({ onLogin }) {
           <FaMoneyBillWave className="logo-icon" />
         </div>
         <h1 className="welcome-text">
-          Welcome toHanamel's<br />
+          Welcome to Hanamel's<br />
           Expenses Tracker
         </h1>
 
         <form onSubmit={handleSubmit} className="login-form">
-          <input
-            type="text"
-            placeholder="Username"
-            value={credentials.username}
-            onChange={(e) => setCredentials({
-              ...credentials,
-              username: e.target.value
-            })}
-            required
-          />
+          <div className="input-container" style={{ 
+            position: 'relative', 
+            width: '100%', 
+            maxWidth: '300px',
+            marginBottom: '15px' 
+          }}>
+            <FaUser style={{ 
+              position: 'absolute',
+              left: '10px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              color: '#666'
+            }} />
+            <input
+              type="text"
+              placeholder="Username"
+              value={credentials.username}
+              onChange={(e) => setCredentials({
+                ...credentials,
+                username: e.target.value
+              })}
+              required
+              style={{ 
+                width: '100%',
+                padding: '12px',
+                paddingLeft: '35px',
+                borderRadius: '8px',
+                border: '1px solid #ddd',
+                fontSize: '16px',
+                outline: 'none'
+              }}
+            />
+          </div>
 
-          <input
-            type="password"
-            placeholder="Password"
-            value={credentials.password}
-            onChange={(e) => setCredentials({
-              ...credentials,
-              password: e.target.value
-            })}
-            required
-          />
+          <div className="input-container" style={{ 
+            position: 'relative', 
+            width: '100%', 
+            maxWidth: '300px',
+            marginBottom: '15px' 
+          }}>
+            <FaLock style={{ 
+              position: 'absolute',
+              left: '10px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              color: '#666'
+            }} />
+            <input
+              type="password"
+              placeholder="Password"
+              value={credentials.password}
+              onChange={(e) => setCredentials({
+                ...credentials,
+                password: e.target.value
+              })}
+              required
+              style={{ 
+                width: '100%',
+                padding: '12px',
+                paddingLeft: '35px',
+                borderRadius: '8px',
+                border: '1px solid #ddd',
+                fontSize: '16px',
+                outline: 'none'
+              }}
+            />
+          </div>
 
           {error && (
-            <div className="error-message">
+            <div className="error-message" style={{ 
+              color: 'red',
+              marginBottom: '10px',
+              fontSize: '14px'
+            }}>
               {error}
             </div>
           )}
 
-          <button type="submit" className="login-btn">
-            Login
-          </button>
+          <motion.button 
+            type="submit" 
+            className="login-btn"
+            style={{ 
+              width: '50%',
+              maxWidth: '150px',
+              padding: '12px',
+              borderRadius: '8px',
+              border: 'none',
+              backgroundColor: '#2563eb',
+              color: 'white',
+              fontSize: '16px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              margin: '0 auto',
+              marginTop: '15px'
+            }}
+            whileHover={{ 
+              scale: 1.02,
+              backgroundColor: '#1d4ed8'
+            }}
+            whileTap={{ scale: 0.98 }}
+            transition={{ duration: 0.2 }}
+          >
+            <FaSignInAlt />
+            {isRegistering ? 'Register' : 'Login'}
+          </motion.button>
         </form>
 
-        <button
+        <motion.button
           className="toggle-auth-btn"
           onClick={() => {
             setIsRegistering(!isRegistering);
             setError('');
             setCredentials({ username: '', password: '' });
           }}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: '#2563eb',
+            cursor: 'pointer',
+            marginTop: '15px',
+            fontSize: '14px'
+          }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          transition={{ duration: 0.2 }}
         >
-          Need an account? Register
-        </button>
+          {isRegistering ? 'Already have an account? Login' : 'Need an account? Register'}
+        </motion.button>
       </div>
     </div>
   );

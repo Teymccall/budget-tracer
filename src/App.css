@@ -2055,3 +2055,22 @@ button:focus,
     width: 100%;
   }
 }
+
+/* Update the app-title styles for mobile */
+@media (max-width: 768px) {
+  .app-title {
+    position: absolute;
+    left: 10px; /* Position from the left instead of right */
+    right: auto; /* Remove right positioning */
+    transform: translateX(0); /* Remove the centering transform */
+    text-align: left; /* Align text to the left */
+  }
+
+  .title-main {
+    font-size: 0.9rem; /* Slightly smaller font for mobile */
+  }
+
+  .title-sub {
+    font-size: 0.6rem; /* Slightly smaller font for mobile */
+  }
+}

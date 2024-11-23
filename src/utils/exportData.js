@@ -23,9 +23,9 @@ export const exportToPDF = (transactions) => {
   doc.setFontSize(14);
   doc.text('Summary', 14, 45);
   doc.setFontSize(12);
-  doc.text(`Total Received: ₵${totalReceived.toFixed(2)}`, 14, 55);
-  doc.text(`Total Sent: ₵${totalSent.toFixed(2)}`, 14, 62);
-  doc.text(`Net Balance: ₵${(totalReceived - totalSent).toFixed(2)}`, 14, 69);
+  doc.text(`Total Received: GHS ${totalReceived.toFixed(2)}`, 14, 55);
+  doc.text(`Total Sent: GHS ${totalSent.toFixed(2)}`, 14, 62);
+  doc.text(`Net Balance: GHS ${(totalReceived - totalSent).toFixed(2)}`, 14, 69);
 
   // Money Received Section
   doc.setFontSize(14);
@@ -47,9 +47,9 @@ export const exportToPDF = (transactions) => {
   Object.entries(receivedByPerson).forEach(([person, data]) => {
     doc.autoTable({
       startY: yPos,
-      head: [[`Received from ${person} - Total: ₵${data.total.toFixed(2)}`]],
+      head: [[`Received from ${person} - Total: GHS ${data.total.toFixed(2)}`]],
       body: data.transactions.map(t => [
-        `${new Date(t.date).toLocaleDateString()} | ₵${t.amount.toFixed(2)} | ${t.category} | ${t.description}`
+        `${new Date(t.date).toLocaleDateString()} | GHS ${t.amount.toFixed(2)} | ${t.category} | ${t.description}`
       ]),
       theme: 'grid',
       styles: { fontSize: 10 },
@@ -84,9 +84,9 @@ export const exportToPDF = (transactions) => {
   Object.entries(sentByPerson).forEach(([person, data]) => {
     doc.autoTable({
       startY: yPos,
-      head: [[`Sent to ${person} - Total: ₵${data.total.toFixed(2)}`]],
+      head: [[`Sent to ${person} - Total: GHS ${data.total.toFixed(2)}`]],
       body: data.transactions.map(t => [
-        `${new Date(t.date).toLocaleDateString()} | ₵${t.amount.toFixed(2)} | ${t.category} | ${t.description}`
+        `${new Date(t.date).toLocaleDateString()} | GHS ${t.amount.toFixed(2)} | ${t.category} | ${t.description}`
       ]),
       theme: 'grid',
       styles: { fontSize: 10 },
@@ -113,7 +113,7 @@ export const exportToPDF = (transactions) => {
       head: [['Date', 'Amount', 'Category', 'Description']],
       body: otherExpenses.map(t => [
         new Date(t.date).toLocaleDateString(),
-        `₵${t.amount.toFixed(2)}`,
+        `GHS ${t.amount.toFixed(2)}`,
         t.category,
         t.description
       ]),
@@ -137,15 +137,15 @@ export const exportToPDF = (transactions) => {
           head: [['Item', 'Price', 'Quantity', 'Total']],
           body: transaction.foodItems.map(item => [
             item.name,
-            `₵${parseFloat(item.price).toFixed(2)}`,
+            `GHS ${parseFloat(item.price).toFixed(2)}`,
             item.quantity,
-            `₵${(parseFloat(item.price) * parseInt(item.quantity)).toFixed(2)}`
+            `GHS ${(parseFloat(item.price) * parseInt(item.quantity)).toFixed(2)}`
           ]),
           foot: [[
             'Total',
             '',
             '',
-            `₵${transaction.amount.toFixed(2)}`
+            `GHS ${transaction.amount.toFixed(2)}`
           ]],
           theme: 'grid',
           styles: { fontSize: 8 },

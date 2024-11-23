@@ -61,7 +61,7 @@ function TransactionItem({ transaction, onEdit }) {
           </div>
         </div>
         <div className={`transaction-amount ${transaction.type}`}>
-          {transaction.type === 'income' ? '+' : '-'}₵{transaction.amount.toFixed(2)}
+          {transaction.type === 'income' ? '+' : '-'}GH₵{transaction.amount.toFixed(2)}
         </div>
       </motion.div>
 

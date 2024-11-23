@@ -15,60 +15,48 @@ function ExportButtons() {
   const exportFoodReport = () => {
     const doc = new jsPDF();
     
-    // Filter only food stuff transactions from special people
+    // Filter only food stuff transactions
     const foodTransactions = state.transactions.filter(t => 
       t.category === 'FOOD STUFFS' && 
-      SPECIAL_PEOPLE.includes(t.person) &&
-      t.type === 'income'
+      t.foodItems && 
+      t.foodItems.length > 0
     );
 
     // Add title
     doc.setFontSize(20);
-    doc.text('Food Stuffs Report', 14, 22);
+    doc.text('Food Items Report', 14, 22);
     doc.setFontSize(12);
     doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 32);
 
     let yPos = 45;
 
-    // Group by person
-    const groupedByPerson = SPECIAL_PEOPLE.reduce((acc, person) => {
-      const transactions = foodTransactions.filter(t => t.person === person);
-      if (transactions.length > 0) {
-        acc[person] = {
-          transactions,
-          total: transactions.reduce((sum, t) => sum + t.amount, 0)
-        };
-      }
-      return acc;
-    }, {});
-
-    Object.entries(groupedByPerson).forEach(([person, data]) => {
+    // Process each transaction with food items
+    foodTransactions.forEach(transaction => {
       doc.setFontSize(14);
-      doc.text(`Food Money from ${person}`, 14, yPos);
+      doc.text(`Food Items from: ${transaction.person}`, 14, yPos);
       yPos += 10;
 
-      data.transactions.forEach(transaction => {
-        if (transaction.foodItems && transaction.foodItems.length > 0) {
-          doc.autoTable({
-            startY: yPos,
-            head: [['Item', 'Price', 'Quantity', 'Total']],
-            body: transaction.foodItems.map(item => [
-              item.name,
-              `₵${parseFloat(item.price).toFixed(2)}`,
-              item.quantity,
-              `₵${(parseFloat(item.price) * parseInt(item.quantity)).toFixed(2)}`
-            ]),
-            theme: 'grid',
-            styles: { fontSize: 8 },
-            margin: { left: 14 }
-          });
-          yPos = doc.lastAutoTable.finalY + 10;
-        }
+      doc.autoTable({
+        startY: yPos,
+        head: [['Item', 'Price', 'Quantity', 'Total']],
+        body: transaction.foodItems.map(item => [
+          item.name,
+          `GHS ${parseFloat(item.price).toFixed(2)}`,
+          item.quantity,
+          `GHS ${(parseFloat(item.price) * parseInt(item.quantity)).toFixed(2)}`
+        ]),
+        foot: [[
+          'Total',
+          '',
+          '',
+          `GHS ${transaction.amount.toFixed(2)}`
+        ]],
+        theme: 'grid',
+        styles: { fontSize: 8 },
+        margin: { left: 14 }
       });
-
-      doc.setFontSize(12);
-      doc.text(`Total from ${person}: ₵${data.total.toFixed(2)}`, 14, yPos);
-      yPos += 15;
+      
+      yPos = doc.lastAutoTable.finalY + 15;
 
       if (yPos > 250) {
         doc.addPage();
@@ -76,7 +64,7 @@ function ExportButtons() {
       }
     });
 
-    doc.save(`hanamels_budget_food_${new Date().toLocaleDateString()}.pdf`);
+    doc.save(`hanamels_food_items_${new Date().toLocaleDateString()}.pdf`);
   };
 
   const exportSpecialReport = () => {
@@ -119,7 +107,7 @@ function ExportButtons() {
           new Date(t.date).toLocaleDateString(),
           t.category,
           t.description,
-          `₵${t.amount.toFixed(2)}`
+          `GH₵${t.amount.toFixed(2)}`
         ]),
         theme: 'grid',
         styles: { fontSize: 10 },
@@ -128,7 +116,7 @@ function ExportButtons() {
 
       yPos = doc.lastAutoTable.finalY + 10;
       doc.setFontSize(12);
-      doc.text(`Total from ${person}: ₵${data.total.toFixed(2)}`, 14, yPos);
+      doc.text(`Total from ${person}: GH₵${data.total.toFixed(2)}`, 14, yPos);
       yPos += 15;
 
       if (yPos > 250) {

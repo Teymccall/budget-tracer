@@ -42,23 +42,20 @@ function TransactionSummary() {
         </div>
       </div>
       <div className={`transaction-amount ${transaction.type}`}>
-        {transaction.type === 'income' ? '+' : '-'}₵{transaction.amount.toFixed(2)}
+        {transaction.type === 'income' ? '+' : '-'}GH₵{transaction.amount.toFixed(2)}
       </div>
     </motion.div>
   );
 
   const SectionHeader = ({ title, icon: Icon, type, total }) => (
     <motion.div 
-      className="section-header glass"
+      className={`section-header glass ${type}`}
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
     >
-      <div className="header-title">
-        <Icon className={`section-icon ${type}`} />
-        <h2>{title}</h2>
-      </div>
+      <h2>{title}</h2>
       <div className={`section-total ${type}`}>
-        Total: ₵{total.toFixed(2)}
+        Total: GH₵{total.toFixed(2)}
       </div>
     </motion.div>
   );

@@ -181,16 +181,19 @@ function TransactionForm({ editingTransaction, setEditingTransaction, onClose })
       ) : (
         <div className="form-group">
           <label htmlFor="amount">Amount</label>
-          <input
-            type="number"
-            id="amount"
-            name="amount"
-            value={formData.amount}
-            onChange={handleChange}
-            min="0"
-            step="0.01"
-            required
-          />
+          <div className="amount-input-container">
+            <input
+              type="number"
+              id="amount"
+              name="amount"
+              value={formData.amount}
+              onChange={handleChange}
+              min="0"
+              step="0.01"
+              required
+              placeholder="0.00"
+            />
+          </div>
         </div>
       )}
 
@@ -238,8 +241,7 @@ function TransactionForm({ editingTransaction, setEditingTransaction, onClose })
           name="description"
           value={formData.description}
           onChange={handleChange}
-          required
-          placeholder="Enter purpose of transaction"
+          placeholder="Enter purpose of transaction (optional)"
         />
       </div>
 

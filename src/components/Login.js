@@ -4,6 +4,7 @@ import { FaMoneyBillWave, FaUser, FaLock, FaSignInAlt } from 'react-icons/fa';
 import { auth, db } from '../firebase';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc, getDoc, getDocs, collection } from 'firebase/firestore';
+import './Login.css';
 
 const ADMIN_CREDENTIALS = {
   username: 'hanamel',
@@ -131,24 +132,13 @@ function Login({ onLogin }) {
           <FaMoneyBillWave className="logo-icon" />
         </div>
         <h1 className="welcome-text">
-          Welcome to Hanamel's<br />
-          Expenses Tracker
+          {isRegistering ? 'Sign Up' : 'Login'}
+          <span>Welcome to Hanamel's Expenses Tracker</span>
         </h1>
 
         <form onSubmit={handleSubmit} className="login-form">
-          <div className="input-container" style={{ 
-            position: 'relative', 
-            width: '100%', 
-            maxWidth: '300px',
-            marginBottom: '15px' 
-          }}>
-            <FaUser style={{ 
-              position: 'absolute',
-              left: '10px',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              color: '#666'
-            }} />
+          <div className="input-container">
+            <FaUser className="input-icon" />
             <input
               type="text"
               placeholder="Username"
@@ -158,31 +148,11 @@ function Login({ onLogin }) {
                 username: e.target.value
               })}
               required
-              style={{ 
-                width: '100%',
-                padding: '12px',
-                paddingLeft: '35px',
-                borderRadius: '8px',
-                border: '1px solid #ddd',
-                fontSize: '16px',
-                outline: 'none'
-              }}
             />
           </div>
 
-          <div className="input-container" style={{ 
-            position: 'relative', 
-            width: '100%', 
-            maxWidth: '300px',
-            marginBottom: '15px' 
-          }}>
-            <FaLock style={{ 
-              position: 'absolute',
-              left: '10px',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              color: '#666'
-            }} />
+          <div className="input-container">
+            <FaLock className="input-icon" />
             <input
               type="password"
               placeholder="Password"
@@ -192,24 +162,11 @@ function Login({ onLogin }) {
                 password: e.target.value
               })}
               required
-              style={{ 
-                width: '100%',
-                padding: '12px',
-                paddingLeft: '35px',
-                borderRadius: '8px',
-                border: '1px solid #ddd',
-                fontSize: '16px',
-                outline: 'none'
-              }}
             />
           </div>
 
           {error && (
-            <div className="error-message" style={{ 
-              color: 'red',
-              marginBottom: '10px',
-              fontSize: '14px'
-            }}>
+            <div className="error-message">
               {error}
             </div>
           )}
@@ -217,29 +174,6 @@ function Login({ onLogin }) {
           <motion.button 
             type="submit" 
             className="login-btn"
-            style={{ 
-              width: '50%',
-              maxWidth: '150px',
-              padding: '12px',
-              borderRadius: '8px',
-              border: 'none',
-              backgroundColor: '#2563eb',
-              color: 'white',
-              fontSize: '16px',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
-              margin: '0 auto',
-              marginTop: '15px'
-            }}
-            whileHover={{ 
-              scale: 1.02,
-              backgroundColor: '#1d4ed8'
-            }}
-            whileTap={{ scale: 0.98 }}
-            transition={{ duration: 0.2 }}
           >
             <FaSignInAlt />
             {isRegistering ? 'Register' : 'Login'}
@@ -253,17 +187,6 @@ function Login({ onLogin }) {
             setError('');
             setCredentials({ username: '', password: '' });
           }}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: '#2563eb',
-            cursor: 'pointer',
-            marginTop: '15px',
-            fontSize: '14px'
-          }}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          transition={{ duration: 0.2 }}
         >
           {isRegistering ? 'Already have an account? Login' : 'Need an account? Register'}
         </motion.button>

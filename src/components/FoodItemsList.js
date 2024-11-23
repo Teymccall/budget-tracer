@@ -2,51 +2,30 @@ import { motion } from 'framer-motion';
 
 function FoodItemsList({ items, setItems }) {
   const addItem = () => {
-    setItems([...items, { name: '', price: '', quantity: 1 }]);
-  };
-
-  const updateItem = (index, field, value) => {
-    const newItems = [...items];
-    newItems[index] = { ...newItems[index], [field]: value };
-    if (field === 'quantity' && value < 1) {
-      newItems[index].quantity = 1;
-    }
-    setItems(newItems);
+    setItems([...items, { name: '', price: '', quantity: '1' }]);
   };
 
   const removeItem = (index) => {
     setItems(items.filter((_, i) => i !== index));
   };
 
-  const calculateTotal = () => {
-    return items.reduce((total, item) => {
-      return total + (parseFloat(item.price) || 0) * (parseInt(item.quantity) || 0);
-    }, 0);
+  const updateItem = (index, field, value) => {
+    const newItems = [...items];
+    newItems[index][field] = value;
+    setItems(newItems);
   };
 
   return (
     <div className="food-items-list">
       <div className="food-items-header">
-        <h3>Food Items List</h3>
-        <motion.button
-          type="button"
-          className="add-item-btn"
-          onClick={addItem}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
+        <h3>Food Items</h3>
+        <button type="button" onClick={addItem} className="add-item-btn">
           Add Item
-        </motion.button>
+        </button>
       </div>
 
       {items.map((item, index) => (
-        <motion.div 
-          key={index} 
-          className="food-item"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-        >
+        <div key={index} className="food-item">
           <div className="item-input">
             <label>Item Name</label>
             <input
@@ -64,7 +43,7 @@ function FoodItemsList({ items, setItems }) {
               type="number"
               value={item.price}
               onChange={(e) => updateItem(index, 'price', e.target.value)}
-              placeholder="Enter price"
+              placeholder="0.00"
               min="0"
               step="0.01"
               required
@@ -83,26 +62,25 @@ function FoodItemsList({ items, setItems }) {
           </div>
 
           <div className="item-total">
-            Total: ₵{((parseFloat(item.price) || 0) * (parseInt(item.quantity) || 0)).toFixed(2)}
+            Total: GH₵{((parseFloat(item.price) || 0) * (parseInt(item.quantity) || 0)).toFixed(2)}
           </div>
 
-          <motion.button
+          <button
             type="button"
             className="remove-item-btn"
             onClick={() => removeItem(index)}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
           >
             ×
-          </motion.button>
-        </motion.div>
+          </button>
+        </div>
       ))}
 
-      {items.length > 0 && (
-        <div className="food-items-total">
-          <strong>Total Amount:</strong> ₵{calculateTotal().toFixed(2)}
-        </div>
-      )}
+      <div className="food-items-total">
+        Total Amount: GH₵{items.reduce((sum, item) => 
+          sum + ((parseFloat(item.price) || 0) * (parseInt(item.quantity) || 0)), 
+          0
+        ).toFixed(2)}
+      </div>
     </div>
   );
 }

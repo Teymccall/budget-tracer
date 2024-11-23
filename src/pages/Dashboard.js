@@ -14,6 +14,7 @@ import {
 import { Pie, Bar } from 'react-chartjs-2';
 import TransactionSummary from '../components/TransactionSummary';
 import ExportButtons from '../components/ExportButtons';
+import { FaWallet, FaArrowDown, FaArrowUp } from 'react-icons/fa';
 
 // Register ChartJS components
 ChartJS.register(
@@ -136,36 +137,38 @@ function Dashboard() {
 
       <motion.div className="summary-cards" variants={containerVariants}>
         <motion.div className="card balance glass" variants={itemVariants}>
-          <h3>Current Balance</h3>
-          <motion.p 
-            className="amount"
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: "spring", stiffness: 260, damping: 20 }}
-          >
-            ₵{balance.toFixed(2)}
+          <div className="card-header">
+            <h3>Current Balance</h3>
+            <div className="card-icon">
+              <FaWallet />
+            </div>
+          </div>
+          <motion.p className="amount">
+            GH₵{balance.toFixed(2)}
           </motion.p>
         </motion.div>
+
         <motion.div className="card income glass" variants={itemVariants}>
-          <h3>Total Income</h3>
-          <motion.p 
-            className="amount"
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: "spring", stiffness: 260, damping: 20 }}
-          >
-            ₵{totalIncome.toFixed(2)}
+          <div className="card-header">
+            <h3>Money Received</h3>
+            <div className="card-icon">
+              <FaArrowDown />
+            </div>
+          </div>
+          <motion.p className="amount income">
+            +GH₵{totalIncome.toFixed(2)}
           </motion.p>
         </motion.div>
+
         <motion.div className="card expenses glass" variants={itemVariants}>
-          <h3>Total Expenses</h3>
-          <motion.p 
-            className="amount"
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: "spring", stiffness: 260, damping: 20 }}
-          >
-            ₵{totalExpenses.toFixed(2)}
+          <div className="card-header">
+            <h3>Money Sent</h3>
+            <div className="card-icon">
+              <FaArrowUp />
+            </div>
+          </div>
+          <motion.p className="amount expense">
+            -GH₵{totalExpenses.toFixed(2)}
           </motion.p>
         </motion.div>
       </motion.div>
@@ -283,7 +286,7 @@ function Dashboard() {
                 animate={{ scale: 1 }}
                 transition={{ delay: index * 0.1 }}
               >
-                {transaction.type === 'income' ? '+' : '-'}₵{transaction.amount.toFixed(2)}
+                {transaction.type === 'income' ? '+' : '-'}GH₵{transaction.amount.toFixed(2)}
               </motion.p>
             </motion.div>
           ))}

@@ -9,9 +9,12 @@ import {
   getDocs, 
   query, 
   where,
-  onSnapshot 
+  onSnapshot,
+  setDoc
 } from 'firebase/firestore';
 import { db } from '../firebase';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../firebase';
 
 function AdminUserManager({ onClose }) {
   const [users, setUsers] = useState([]);
@@ -98,6 +101,53 @@ function AdminUserManager({ onClose }) {
       console.error('Error updating user:', error);
       alert('Error updating user. Please try again.');
     }
+  };
+
+  const handleAddUser = async (e) => {
+    e.preventDefault();
+    try {
+      const email = createEmailFromUsername(newUser.username);
+
+      // Check if username already exists
+      const usersSnapshot = await getDocs(collection(db, 'users'));
+      const userExists = usersSnapshot.docs.some(
+        doc => doc.data().username.toLowerCase() === newUser.username.toLowerCase()
+      );
+
+      if (userExists) {
+        alert('Username already exists');
+        return;
+      }
+
+      // Create auth user
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        newUser.password
+      );
+
+      // Create user document in Firestore
+      const userToAdd = {
+        id: userCredential.user.uid,
+        username: newUser.username,
+        email: email,
+        isAdmin: false,
+        isBlocked: false,
+        createdAt: new Date().getTime()
+      };
+
+      await setDoc(doc(db, 'users', userCredential.user.uid), userToAdd);
+      setNewUser({ username: '', password: '' });
+      setShowAddModal(false);
+      alert('User added successfully');
+    } catch (error) {
+      console.error('Error adding user:', error);
+      alert('Error adding user. Please try again.');
+    }
+  };
+
+  const createEmailFromUsername = (username) => {
+    return `${username.toLowerCase().replace(/\s+/g, '')}@hanamels.com`;
   };
 
   return (
@@ -254,6 +304,78 @@ function AdminUserManager({ onClose }) {
                   type="button" 
                   className="cancel-btn"
                   onClick={() => setShowEditModal(false)}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  Cancel
+                </motion.button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      )}
+
+      {showAddModal && (
+        <div className="modal-overlay">
+          <motion.div 
+            className="add-user-modal glass"
+            initial={{ scale: 0.5 }}
+            animate={{ scale: 1 }}
+          >
+            <div className="modal-header">
+              <h3>Add New User</h3>
+              <motion.button
+                className="modal-close-btn"
+                onClick={() => setShowAddModal(false)}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                ×
+              </motion.button>
+            </div>
+
+            <form onSubmit={handleAddUser} className="add-user-form">
+              <div className="form-group">
+                <label>Username</label>
+                <input
+                  type="text"
+                  value={newUser.username}
+                  onChange={(e) => setNewUser({
+                    ...newUser,
+                    username: e.target.value
+                  })}
+                  placeholder="Enter username"
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Password</label>
+                <input
+                  type="password"
+                  value={newUser.password}
+                  onChange={(e) => setNewUser({
+                    ...newUser,
+                    password: e.target.value
+                  })}
+                  placeholder="Enter password"
+                  required
+                />
+              </div>
+
+              <div className="modal-actions">
+                <motion.button 
+                  type="submit" 
+                  className="save-btn"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  Add User
+                </motion.button>
+                <motion.button 
+                  type="button" 
+                  className="cancel-btn"
+                  onClick={() => setShowAddModal(false)}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >

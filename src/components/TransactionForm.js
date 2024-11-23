@@ -14,7 +14,6 @@ function TransactionForm({ editingTransaction, setEditingTransaction, onClose })
   const { dispatch } = useBudget();
   const { theme } = useTheme();
   const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-  const [customPerson, setCustomPerson] = useState('');
   
   const [formData, setFormData] = useState({
     description: '',

@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FaMoneyBillWave, FaUser, FaLock, FaSignInAlt } from 'react-icons/fa';
+import { auth, db } from '../firebase';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import { doc, setDoc, getDoc, getDocs, collection } from 'firebase/firestore';
 
 const ADMIN_CREDENTIALS = {
   username: 'hanamel',
@@ -30,57 +33,93 @@ function Login({ onLogin }) {
     }
   }, [onLogin]);
 
-  const handleSubmit = (e) => {
+  const createEmailFromUsername = (username) => {
+    return `${username.toLowerCase().replace(/\s+/g, '')}@hanamels.com`;
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
-    if (credentials.username === ADMIN_CREDENTIALS.username && 
-        credentials.password === ADMIN_CREDENTIALS.password) {
-      const adminUser = {
-        id: 'admin',
-        username: credentials.username,
-        isAdmin: true,
-        accessibleNames: ADMIN_ACCESS_NAMES
-      };
-      localStorage.setItem('currentUser', JSON.stringify(adminUser));
-      onLogin(adminUser);
-      return;
-    }
+    try {
+      if (credentials.username === ADMIN_CREDENTIALS.username && 
+          credentials.password === ADMIN_CREDENTIALS.password) {
+        const adminUser = {
+          id: 'admin',
+          username: credentials.username,
+          isAdmin: true,
+          accessibleNames: ADMIN_ACCESS_NAMES,
+          createdAt: new Date().getTime()
+        };
 
-    if (isRegistering) {
-      const existingUsers = JSON.parse(localStorage.getItem('users') || '[]');
-      if (existingUsers.some(user => user.username === credentials.username)) {
-        setError('Username already exists');
+        try {
+          await setDoc(doc(db, 'users', 'admin'), adminUser, { merge: true });
+        } catch (error) {
+          console.error('Error storing admin data:', error);
+        }
+
+        localStorage.setItem('currentUser', JSON.stringify(adminUser));
+        onLogin(adminUser);
         return;
       }
 
-      const newUser = {
-        id: Date.now().toString(),
-        username: credentials.username,
-        password: credentials.password,
-        isAdmin: false,
-        isBlocked: false
-      };
+      const email = createEmailFromUsername(credentials.username);
 
-      localStorage.setItem('users', JSON.stringify([...existingUsers, newUser]));
-      localStorage.setItem('currentUser', JSON.stringify(newUser));
-      onLogin(newUser);
-    } else {
-      const users = JSON.parse(localStorage.getItem('users') || '[]');
-      const user = users.find(u => 
-        u.username === credentials.username && 
-        u.password === credentials.password
-      );
+      if (isRegistering) {
+        const usersSnapshot = await getDocs(collection(db, 'users'));
+        const userExists = usersSnapshot.docs.some(
+          doc => doc.data().username.toLowerCase() === credentials.username.toLowerCase()
+        );
 
-      if (user) {
-        if (user.isBlocked) {
-          setError('Your account has been blocked. Please contact the administrator.');
+        if (userExists) {
+          setError('Username already exists');
           return;
         }
-        localStorage.setItem('currentUser', JSON.stringify(user));
-        onLogin(user);
+
+        const userCredential = await createUserWithEmailAndPassword(
+          auth, 
+          email,
+          credentials.password
+        );
+
+        const newUser = {
+          id: userCredential.user.uid,
+          username: credentials.username,
+          email: email,
+          isAdmin: false,
+          isBlocked: false,
+          createdAt: new Date().getTime()
+        };
+
+        await setDoc(doc(db, 'users', userCredential.user.uid), newUser);
+        localStorage.setItem('currentUser', JSON.stringify(newUser));
+        onLogin(newUser);
       } else {
+        const userCredential = await signInWithEmailAndPassword(
+          auth,
+          email,
+          credentials.password
+        );
+
+        const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          if (userData.isBlocked) {
+            setError('Your account has been blocked. Please contact the administrator.');
+            return;
+          }
+          localStorage.setItem('currentUser', JSON.stringify(userData));
+          onLogin(userData);
+        }
+      }
+    } catch (error) {
+      console.error('Auth error:', error);
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
         setError('Invalid username or password');
+      } else if (error.code === 'auth/email-already-in-use') {
+        setError('Username already exists');
+      } else {
+        setError('An error occurred. Please try again.');
       }
     }
   };

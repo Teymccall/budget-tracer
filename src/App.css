@@ -1025,6 +1025,7 @@ body {
   align-items: center;
   z-index: 2000;
   padding: 1rem;
+  overflow-y: auto;
 }
 
 .modal-content {
@@ -1913,6 +1914,9 @@ button:focus,
   max-width: 400px;
   position: relative;
   box-shadow: 0 8px 32px rgba(31, 38, 135, 0.2);
+  margin: auto;
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
 .dark .add-user-modal {
@@ -2044,15 +2048,20 @@ button:focus,
   .add-user-modal {
     padding: 1.5rem;
     width: 95%;
+    margin: 1rem auto;
+    max-height: 80vh;
+  }
+
+  .modal-overlay {
+    align-items: flex-start;
+    padding: 0;
   }
 
   .modal-actions {
-    flex-direction: column;
-  }
-
-  .save-btn,
-  .cancel-btn {
-    width: 100%;
+    position: sticky;
+    bottom: 0;
+    background: inherit;
+    padding-top: 1rem;
   }
 }
 
@@ -2072,5 +2081,110 @@ button:focus,
 
   .title-sub {
     font-size: 0.6rem; /* Slightly smaller font for mobile */
+  }
+}
+
+/* Edit User Modal Styles */
+.edit-user-modal {
+  background: var(--background-light);
+  padding: 2.5rem;
+  border-radius: 1.5rem;
+  width: 90%;
+  max-width: 400px;
+  position: relative;
+  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.2);
+  margin: auto;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.dark .edit-user-modal {
+  background: var(--background-dark);
+}
+
+.edit-user-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.edit-user-form .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.edit-user-form label {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: inherit;
+  margin-left: 0.5rem;
+}
+
+.edit-user-form input {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.05);
+  color: inherit;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+}
+
+.edit-user-form input:focus {
+  border-color: var(--primary-color);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+/* Checkbox styling */
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+}
+
+/* Mobile optimizations for edit modal */
+@media (max-width: 768px) {
+  .edit-user-modal {
+    padding: 1.5rem;
+    width: 95%;
+    margin: 1rem auto;
+    max-height: 80vh;
+  }
+
+  .edit-user-form .form-group {
+    gap: 0.75rem;
+  }
+
+  .edit-user-form input {
+    padding: 0.75rem;
+    font-size: 0.95rem;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .save-btn,
+  .cancel-btn {
+    width: 100%;
   }
 }

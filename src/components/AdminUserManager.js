@@ -1,7 +1,17 @@
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { FaEdit, FaTrash, FaBan, FaUnlock, FaFileDownload, FaUserShield, FaUserPlus, FaUser, FaTimes, FaLock } from 'react-icons/fa';
-import { exportToPDF } from '../utils/exportData';
+import { motion } from 'framer-motion';
+import { FaUserShield, FaUserPlus, FaUser, FaEdit, FaTrash, FaUnlock, FaBan } from 'react-icons/fa';
+import { 
+  collection, 
+  doc, 
+  updateDoc, 
+  deleteDoc, 
+  getDocs, 
+  query, 
+  where,
+  onSnapshot 
+} from 'firebase/firestore';
+import { db } from '../firebase';
 
 function AdminUserManager({ onClose }) {
   const [users, setUsers] = useState([]);
@@ -14,8 +24,16 @@ function AdminUserManager({ onClose }) {
   });
 
   useEffect(() => {
-    const savedUsers = JSON.parse(localStorage.getItem('users') || '[]');
-    setUsers(savedUsers);
+    // Real-time users listener
+    const unsubscribe = onSnapshot(collection(db, 'users'), (snapshot) => {
+      const usersData = snapshot.docs.map(doc => ({
+        ...doc.data(),
+        id: doc.id
+      }));
+      setUsers(usersData);
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const handleEditUser = (user) => {
@@ -26,80 +44,60 @@ function AdminUserManager({ onClose }) {
     setShowEditModal(true);
   };
 
-  const handleDeleteUser = (userId) => {
+  const handleDeleteUser = async (userId) => {
     if (window.confirm('Are you sure you want to delete this user?')) {
-      const updatedUsers = users.filter(user => user.id !== userId);
-      localStorage.setItem('users', JSON.stringify(updatedUsers));
-      setUsers(updatedUsers);
-    }
-  };
+      try {
+        // Delete user document from Firestore
+        await deleteDoc(doc(db, 'users', userId));
+        
+        // Delete user's transactions
+        const q = query(collection(db, 'transactions'), where('userId', '==', userId));
+        const querySnapshot = await getDocs(q);
+        const deletePromises = querySnapshot.docs.map(doc => deleteDoc(doc.ref));
+        await Promise.all(deletePromises);
 
-  const handleToggleBlock = (userId) => {
-    const updatedUsers = users.map(user => {
-      if (user.id === userId) {
-        return { ...user, isBlocked: !user.isBlocked };
+        alert('User deleted successfully');
+      } catch (error) {
+        console.error('Error deleting user:', error);
+        alert('Error deleting user. Please try again.');
       }
-      return user;
-    });
-    
-    // Update users in localStorage
-    localStorage.setItem('users', JSON.stringify(updatedUsers));
-    setUsers(updatedUsers);
-
-    // Check if the blocked user is currently logged in
-    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-    if (currentUser && currentUser.id === userId) {
-      // Force logout if the user is currently logged in
-      localStorage.removeItem('currentUser');
-      window.location.reload(); // Refresh the page to trigger logout
     }
   };
 
-  const handleExportUserTransactions = (userId) => {
-    const userTransactions = JSON.parse(localStorage.getItem(`budgetState_${userId}`))?.transactions || [];
-    exportToPDF(userTransactions);
+  const handleToggleBlock = async (userId, isBlocked) => {
+    try {
+      await updateDoc(doc(db, 'users', userId), {
+        isBlocked: isBlocked
+      });
+      alert(`User ${isBlocked ? 'blocked' : 'unblocked'} successfully`);
+    } catch (error) {
+      console.error('Error updating user:', error);
+      alert(`Error ${isBlocked ? 'blocking' : 'unblocking'} user. Please try again.`);
+    }
   };
 
-  const saveUserChanges = (e) => {
+  const saveUserChanges = async (e) => {
     e.preventDefault();
-    const updatedUsers = users.map(user => {
-      if (user.id === editingUser.id) {
-        return {
-          ...editingUser,
-          password: editingUser.newPassword ? editingUser.newPassword : editingUser.password
-        };
+    try {
+      const userRef = doc(db, 'users', editingUser.id);
+      const updateData = {
+        username: editingUser.username,
+        isBlocked: editingUser.isBlocked
+      };
+
+      // If there's a new password, update it
+      if (editingUser.newPassword) {
+        updateData.password = editingUser.newPassword;
       }
-      return user;
-    });
 
-    localStorage.setItem('users', JSON.stringify(updatedUsers));
-    setUsers(updatedUsers);
-    setShowEditModal(false);
-    setEditingUser(null);
-  };
-
-  const handleAddUser = (e) => {
-    e.preventDefault();
-    const existingUsers = JSON.parse(localStorage.getItem('users') || '[]');
-    
-    if (existingUsers.some(user => user.username === newUser.username)) {
-      alert('Username already exists');
-      return;
+      await updateDoc(userRef, updateData);
+      setShowEditModal(false);
+      setEditingUser(null);
+      alert('User updated successfully');
+    } catch (error) {
+      console.error('Error updating user:', error);
+      alert('Error updating user. Please try again.');
     }
-
-    const userToAdd = {
-      id: Date.now().toString(),
-      username: newUser.username,
-      password: newUser.password,
-      isAdmin: false,
-      isBlocked: false
-    };
-
-    const updatedUsers = [...existingUsers, userToAdd];
-    localStorage.setItem('users', JSON.stringify(updatedUsers));
-    setUsers(updatedUsers);
-    setNewUser({ username: '', password: '' });
-    setShowAddModal(false);
   };
 
   return (
@@ -147,7 +145,7 @@ function AdminUserManager({ onClose }) {
               <div className="user-meta">
                 <p>ID: {user.id}</p>
                 <p>Type: {user.isAdmin ? 'Admin' : 'Regular User'}</p>
-                <p>Created: {new Date(parseInt(user.id)).toLocaleDateString()}</p>
+                <p>Created: {new Date(user.createdAt).toLocaleDateString()}</p>
               </div>
             </div>
 
@@ -157,7 +155,6 @@ function AdminUserManager({ onClose }) {
                 onClick={() => handleEditUser(user)}
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
-                title="Edit User"
               >
                 <FaEdit />
               </motion.button>
@@ -167,29 +164,17 @@ function AdminUserManager({ onClose }) {
                 onClick={() => handleDeleteUser(user.id)}
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
-                title="Delete User"
               >
                 <FaTrash />
               </motion.button>
 
               <motion.button
                 className={`action-btn ${user.isBlocked ? 'unblock' : 'block'}`}
-                onClick={() => handleToggleBlock(user.id)}
+                onClick={() => handleToggleBlock(user.id, !user.isBlocked)}
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
-                title={user.isBlocked ? 'Unblock User' : 'Block User'}
               >
                 {user.isBlocked ? <FaUnlock /> : <FaBan />}
-              </motion.button>
-
-              <motion.button
-                className="action-btn export"
-                onClick={() => handleExportUserTransactions(user.id)}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-                title="Export Transactions"
-              >
-                <FaFileDownload />
               </motion.button>
             </div>
           </motion.div>
@@ -197,21 +182,14 @@ function AdminUserManager({ onClose }) {
       </div>
 
       {showEditModal && (
-        <motion.div 
-          className="modal-overlay"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-        >
+        <div className="modal-overlay">
           <motion.div 
             className="edit-user-modal glass"
             initial={{ scale: 0.5 }}
             animate={{ scale: 1 }}
           >
             <div className="modal-header">
-              <div className="modal-title">
-                <h3>Edit User</h3>
-              </div>
+              <h3>Edit User</h3>
               <motion.button
                 className="modal-close-btn"
                 onClick={() => setShowEditModal(false)}
@@ -227,12 +205,11 @@ function AdminUserManager({ onClose }) {
                 <label>Username</label>
                 <input
                   type="text"
-                  value={editingUser.username}
+                  value={editingUser?.username || ''}
                   onChange={(e) => setEditingUser({
                     ...editingUser,
                     username: e.target.value
                   })}
-                  placeholder="Enter username"
                   required
                 />
               </div>
@@ -241,7 +218,7 @@ function AdminUserManager({ onClose }) {
                 <label>New Password</label>
                 <input
                   type="password"
-                  value={editingUser.newPassword}
+                  value={editingUser?.newPassword || ''}
                   onChange={(e) => setEditingUser({
                     ...editingUser,
                     newPassword: e.target.value
@@ -250,11 +227,11 @@ function AdminUserManager({ onClose }) {
                 />
               </div>
 
-              <div className="form-group checkbox-group">
+              <div className="form-group">
                 <label className="checkbox-label">
                   <input
                     type="checkbox"
-                    checked={editingUser.isBlocked}
+                    checked={editingUser?.isBlocked || false}
                     onChange={(e) => setEditingUser({
                       ...editingUser,
                       isBlocked: e.target.checked
@@ -285,87 +262,7 @@ function AdminUserManager({ onClose }) {
               </div>
             </form>
           </motion.div>
-        </motion.div>
-      )}
-
-      {showAddModal && (
-        <motion.div 
-          className="modal-overlay"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-        >
-          <motion.div 
-            className="add-user-modal glass"
-            initial={{ scale: 0.5 }}
-            animate={{ scale: 1 }}
-            transition={{ type: "spring", damping: 20 }}
-          >
-            <div className="modal-header">
-              <div className="modal-title">
-                <h3>Add New User</h3>
-              </div>
-              <motion.button
-                className="modal-close-btn"
-                onClick={() => setShowAddModal(false)}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                ×
-              </motion.button>
-            </div>
-
-            <form onSubmit={handleAddUser} className="add-user-form">
-              <div className="form-group">
-                <label>Username</label>
-                <input
-                  type="text"
-                  value={newUser.username}
-                  onChange={(e) => setNewUser({
-                    ...newUser,
-                    username: e.target.value
-                  })}
-                  placeholder="Enter username"
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Password</label>
-                <input
-                  type="password"
-                  value={newUser.password}
-                  onChange={(e) => setNewUser({
-                    ...newUser,
-                    password: e.target.value
-                  })}
-                  placeholder="Enter password"
-                  required
-                />
-              </div>
-
-              <div className="modal-actions">
-                <motion.button 
-                  type="submit" 
-                  className="save-btn"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  Add User
-                </motion.button>
-                <motion.button 
-                  type="button" 
-                  className="cancel-btn"
-                  onClick={() => setShowAddModal(false)}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  Cancel
-                </motion.button>
-              </div>
-            </form>
-          </motion.div>
-        </motion.div>
+        </div>
       )}
     </motion.div>
   );

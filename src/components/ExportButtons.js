@@ -2,7 +2,6 @@ import { motion } from 'framer-motion';
 import { FaFileDownload, FaUtensils, FaUsers, FaEllipsisV } from 'react-icons/fa';
 import { useState } from 'react';
 import { useBudget } from '../contexts/BudgetContext';
-import { useTheme } from '../contexts/ThemeContext';
 import { exportToPDF } from '../utils/exportData';
 import { SPECIAL_PEOPLE } from '../utils/constants';
 import jsPDF from 'jspdf';
@@ -10,7 +9,6 @@ import 'jspdf-autotable';
 
 function ExportButtons() {
   const { state } = useBudget();
-  const { isDarkMode } = useTheme();
   const [showMenu, setShowMenu] = useState(false);
   const currentUser = JSON.parse(localStorage.getItem('currentUser'));
 
